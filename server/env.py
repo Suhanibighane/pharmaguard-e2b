@@ -94,6 +94,10 @@ class PharmaEnv:
         step_penalty = (self.current_step - 1) * 0.1
         final_reward = max(reward - step_penalty, 0.0)
         
+        # Ensure score is strictly between 0 and 1 (not 0.0 and not 1.0)
+        # We clamp to [0.005, 0.995] to satisfy Phase 2 validation requirement
+        final_reward = max(min(final_reward, 0.995), 0.005)
+        
         # We define "success" as a high reward. If perfect, we're done.
         # Otherwise, if we have steps remaining, allow retry.
         if reward >= 0.95 or self.current_step >= self.max_steps:
@@ -104,7 +108,7 @@ class PharmaEnv:
             msg = f"Incomplete or incorrect. {feedback} Try again."
             self.last_feedback = feedback
 
-        return self.get_observation(), final_reward, self.done, {"message": msg, "step": self.current_step}
+        return self.get_observation(), float(final_reward), self.done, {"message": msg, "step": self.current_step}
 
     def _grade_easy(self, action: PharmaAction, case: Dict[str, Any]) -> Tuple[float, str]:
         reward = 0.0
@@ -135,15 +139,17 @@ class PharmaEnv:
         soc_correct = (action.meddra_soc and fuzzy_match(case["gt_meddra_soc"], action.meddra_soc))
         
         if pt_correct:
-            reward += 0.5
-        elif soc_correct:
-            reward += 0.25
-            feedback_parts.append("SOC is correct, but PT is not the best match.")
+            reward += 0.6
         else:
-            feedback_parts.append("The MedDRA coding for SOC and PT needs review.")
+            feedback_parts.append("PT identification is incorrect.")
+            
+        if soc_correct:
+            reward += 0.2
+        else:
+            feedback_parts.append("SOC identification is incorrect.")
             
         if action.is_serious is not None and action.is_serious == case["gt_is_serious"]:
-            reward += 0.25
+            reward += 0.2
         else:
             feedback_parts.append("Re-evaluate the seriousness criteria (hospitalization, life-threatening, etc.).")
             
@@ -154,17 +160,17 @@ class PharmaEnv:
         feedback_parts = []
         
         if action.did_event_follow_drug is not None and action.did_event_follow_drug == case["gt_did_event_follow_drug"]:
-            reward += 0.15
+            reward += 0.2
         else:
             feedback_parts.append("Carefully check the temporal sequence (did drug precede event?).")
             
         if action.is_there_alternative_cause is not None and action.is_there_alternative_cause == case["gt_is_there_alternative_cause"]:
-            reward += 0.15
+            reward += 0.2
         else:
             feedback_parts.append("Consider if other medications or patient history provide a better explanation.")
             
         if action.causality_category and fuzzy_match(case["gt_causality_category"], action.causality_category):
-            reward += 0.55
+            reward += 0.6
         else:
             feedback_parts.append("Review WHO-UMC criteria for certain vs probable/possible.")
             
