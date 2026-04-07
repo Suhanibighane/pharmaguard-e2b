@@ -1,6 +1,14 @@
 spec_version: 1
 name: pharmaguard-e2b
+description: "A clinical pharmacovigilance triage environment for ICH E2B(R3) adverse event reporting."
 type: space
 runtime: fastapi
-app: server.main:app
+app: server.app:app
 port: 7860
+modes:
+  - id: easy
+    name: "Task 1: Signal Detection (Easy)"
+  - id: medium
+    name: "Task 2: MedDRA Coding (Medium)"
+  - id: hard
+    name: "Task 3: Causality Assessment (Hard)"

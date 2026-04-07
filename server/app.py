@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI, Request
 from server.models import ResetRequest, StepRequest, StepResponse, PharmaObservation
 from server.env import PharmaEnv
@@ -38,3 +39,9 @@ async def state():
 @app.get("/")
 async def read_root():
     return {"status": "ok", "app": "PharmaGuard-E2B OpenEnv"}
+
+def main():
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860, reload=False)
+
+if __name__ == "__main__":
+    main()

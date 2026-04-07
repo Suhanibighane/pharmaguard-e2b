@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pharmaguard-e2b"
+version = "0.1.0"
+description = "A clinical pharmacovigilance triage environment for ICH E2B(R3) adverse event reporting."
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "openai",
+    "httpx",
+    "openenv-core>=0.2.0"
+]
+
+[project.scripts]
+server = "server.app:main"
