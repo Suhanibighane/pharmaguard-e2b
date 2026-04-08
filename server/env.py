@@ -75,7 +75,7 @@ class PharmaEnv:
 
     def step(self, action: PharmaAction) -> Tuple[PharmaObservation, float, bool, Dict[str, Any]]:
         if self.done:
-            return self.get_observation(), 0.0, True, {"error": "Episode already done. Call reset."}
+            return self.get_observation(), 0.005, True, {"error": "Episode already done. Call reset."}
             
         self.current_step += 1
         case = get_case(self.current_task_level, self.current_case_index)

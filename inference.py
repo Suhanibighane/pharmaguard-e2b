@@ -72,7 +72,7 @@ async def run_task(client: OpenAI, task_level: str, seed: int):
     
     rewards: List[float] = []
     max_steps = 3
-    total_score = 0.0
+    total_score = 0.005 # Ensure start score satisfies (0,1) range
     success = False
     
     try:
@@ -115,23 +115,26 @@ async def run_task(client: OpenAI, task_level: str, seed: int):
                 
                 step_data = step_resp.json()
                 obs = step_data.get("observation", {})
-                reward = step_data.get("reward", 0.0)
+                reward = step_data.get("reward", 0.005)
                 done = step_data.get("done", True)
                 error = step_data.get("info", {}).get("error", None)
                 
                 rewards.append(reward)
                 log_step(step=step, action=cleaned_text, reward=reward, done=done, error=error)
                 
+                total_score = float(reward) # Capture last reward even if not done
                 if done:
-                    total_score = reward
                     success = total_score >= 0.7
                 
                 step += 1
                 
     except Exception as e:
         print(f"[DEBUG] Error during trajectory: {e}", flush=True)
-        total_score = 0.0
+        total_score = 0.005
 
+    # Final safety clamp for OpenEnv range (0, 1)
+    total_score = max(min(total_score, 0.995), 0.005)
+    
     log_end(success=success, steps=len(rewards), score=total_score, rewards=rewards)
     return total_score
 
